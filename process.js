@@ -4301,17 +4301,17 @@ module.exports.processTrackedEntityInstances = async (
 				processedUnits,
 				chunkSize
 			);
-			// if (callback) {
-			// 	console.log("Generating layering");
-			// 	await callback({
-			// 		searchInstances: trackedEntityInstances.map(
-			// 			({ trackedEntityInstance }) => trackedEntityInstance
-			// 		),
-			// 		processedUnits,
-			// 		sessions,
-			// 		periods,
-			// 	});
-			// }
+			 if (callback) {
+			 	console.log("Generating layering");
+			 	await callback({
+			 		searchInstances: trackedEntityInstances.map(
+			 			({ trackedEntityInstance }) => trackedEntityInstance
+			 		),
+			 		processedUnits,
+			 		sessions,
+			 		periods,
+			 	});
+			}
 		}
 	}
 };
