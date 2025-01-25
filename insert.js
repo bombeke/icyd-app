@@ -48,12 +48,12 @@ const processAll = async () => {
 		50,
 		100,
 		processedUnits
-		// useProgramStage,
-		// {
-		// 	sessions,
-		// 	periods,
-		// 	// trackedEntityInstance: "ts8JKdkApPI",
-		// }
+		useProgramStage,
+		{
+		 	sessions,
+		 	periods,
+		 	// trackedEntityInstance: "ts8JKdkApPI",
+		}	
 	);
 	console.log("Processing program RDEklSXCD4C ");
 	await processTrackedEntityInstances(
@@ -61,12 +61,12 @@ const processAll = async () => {
 		500,
 		100,
 		processedUnits
-		// useTracker,
-		// {
-		// 	// sessions,
-		// 	periods,
-		// 	// trackedEntityInstance: "HJIFLP5FYis",
-		// }
+		useTracker,
+		{
+		 	// sessions,
+		 	periods,
+		 	// trackedEntityInstance: "HJIFLP5FYis",
+		}
 	);
 };
 processAll().then(() => console.log("Done"));
