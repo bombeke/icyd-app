@@ -35,11 +35,11 @@ const processAll = async () => {
 		100,
 		processedUnits,
 		null
-		// {
-		// 	// sessions,
-		// 	periods,
-		// 	// trackedEntityInstance: "N3wHKMtAPPz",
-		// }
+		 {
+		 	// sessions,
+		 	periods,
+		 	// trackedEntityInstance: "N3wHKMtAPPz",
+		 }
 	);
 
 	console.log("Processing program IXxHJADVCkb ");
