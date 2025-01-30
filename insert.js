@@ -34,7 +34,7 @@ const processAll = async () => {
 		250,
 		100,
 		processedUnits,
-		null
+		null,
 		 {
 		 	// sessions,
 		 	periods,
@@ -43,11 +43,12 @@ const processAll = async () => {
 	);
 
 	console.log("Processing program IXxHJADVCkb ");
+	
 	await processTrackedEntityInstances(
 		"IXxHJADVCkb",
 		50,
 		100,
-		processedUnits
+		processedUnits,
 		useProgramStage,
 		{
 		 	sessions,
@@ -60,7 +61,7 @@ const processAll = async () => {
 		"RDEklSXCD4C",
 		500,
 		100,
-		processedUnits
+		processedUnits,
 		useTracker,
 		{
 		 	// sessions,

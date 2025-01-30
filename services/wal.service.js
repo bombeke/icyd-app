@@ -57,6 +57,11 @@ module.exports = {
 						);
 						let params = {
 							url: "trackedEntityInstances.json",
+							fields: ctx.params.fields || "*",
+							ouMode: ctx.params.ouMode || "ALL",
+							pageSize: ctx.params.pageSize || 500,
+							order: "created:desc",
+							includeDeleted: true,
 							...ctx.params,
 							page,
 						};

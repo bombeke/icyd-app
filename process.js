@@ -1050,13 +1050,13 @@ module.exports.processInstances = async (
 		this.getProgramStageData(
 			Object.keys(indexCases),
 			"Cx35Elpu330",
-			"trackedEntityInstance,eventDate,XPJtNCSNCdR"
+			"*" ///"trackedEntityInstance,eventDate,XPJtNCSNCdR"
 		),
 		this.getProgramStageData(trackedEntityInstanceIds, "qNxRoC1wIYA"),
 	]);
 	for (const {
 		enrollmentDate,
-		hly709n51z0,
+	    hly709n51z0, /// Not found
 		HLKc2AKR9jW,
 		N1nMqKtYKvI,
 		nDUbdM2FjyP,
@@ -1084,7 +1084,7 @@ module.exports.processInstances = async (
 			allServiceLinkages,
 			trackedEntityInstance
 		);
-		const exposedInfants = this.getEvents(allViralLoads, trackedEntityInstance);
+		const exposedInfants = this.getEvents(allExposedInfants, trackedEntityInstance);
 		const missedAppointments = this.getEvents(
 			allMissedAppointments,
 			trackedEntityInstance
@@ -1095,7 +1095,7 @@ module.exports.processInstances = async (
 		const hasEnrollment = !!enrollmentDate;
 		let hvat = {};
 		let mostRecentGraduation = {};
-		const HVATAssessments = allHVatAssessments[hly709n51z0] || [];
+		const HVATAssessments = allHVatAssessments?.[hly709n51z0] || []; /// Check attribute here
 		const uniqHVATAssessments = uniqBy(HVATAssessments, "eventDate");
 
 		const filtered = orderBy(
@@ -1143,7 +1143,7 @@ module.exports.processInstances = async (
 				houseHoldType = "Struggling";
 			}
 		}
-		// const memberSessions = groupActivities[HLKc2AKR9jW] || [];
+		// const memberSessions = groupActivities[HLKc2AKR9jW] || [];  /// Member sessions
 		let allPreviousLayering = previousLayer[trackedEntityInstance] || {};
 
 		for (const period of periods) {
@@ -2527,7 +2527,7 @@ module.exports.generateLayering = (options) => {
 	let layering = [];
 	for (const {
 		enrollmentDate,
-		hly709n51z0,
+		hly709n51z0, /// Not found
 		HLKc2AKR9jW,
 		N1nMqKtYKvI,
 		nDUbdM2FjyP,
@@ -2564,7 +2564,7 @@ module.exports.generateLayering = (options) => {
 		const hasEnrollment = !!enrollmentDate;
 		let hvat = {};
 		let mostRecentGraduation = {};
-		const HVATAssessments = allHVATAssessments[hly709n51z0] || [];
+		const HVATAssessments = allHVATAssessments[hly709n51z0] || []; /// Not found
 
 		const uniqHVATAssessments = uniqBy(HVATAssessments, "eventDate");
 		const filtered = orderBy(uniqHVATAssessments, ["eventDate"], ["desc"]);
@@ -2609,7 +2609,7 @@ module.exports.generateLayering = (options) => {
 				houseHoldType = "Struggling";
 			}
 		}
-		// const memberSessions = groupActivities[HLKc2AKR9jW] || [];
+		// const memberSessions = groupActivities[HLKc2AKR9jW] || []; /// Moved to another program
 		let allPreviousLayering = previousLayering[trackedEntityInstance] || {};
 
 		for (const period of periods) {
@@ -4069,7 +4069,7 @@ module.exports.useTracker = async (args) => {
 	}
 
 	let query = {
-		query: "select * from rdeklsxcd4c order by hly709n51z0",
+		query: "select * from rdeklsxcd4c order by hly709n51z0", /// check here not found
 		fetch_size: 1000,
 	};
 
@@ -4236,7 +4236,7 @@ module.exports.processTrackedEntityInstances = async (
 	pageSize,
 	chunkSize,
 	processedUnits,
-	// callback,
+	callback,
 	otherParams = {}
 ) => {
 	let startingPage = 1;
