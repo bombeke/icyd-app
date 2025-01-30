@@ -1,7 +1,7 @@
 "use strict";
 const dotenv = require("dotenv");
 
-//dotenv.config();
+dotenv.config();
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -16,7 +16,6 @@ const instance = axios.create({
 	},
 });
 
-console.log("BASEURL:", process.env.ICYD_BASE_URL)
 module.exports = {
 	name: "dhis2",
 
@@ -45,6 +44,7 @@ module.exports = {
 				path: "/",
 			},
 			async handler(ctx) {
+				this.logger.info(`Server:${ process.env.ICYD_BASE_URL}`);
 				const { url, ...params } = ctx.params;
 				const { data } = await instance.get(url, {
 					params,

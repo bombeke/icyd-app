@@ -4821,3 +4821,101 @@ module.exports.generatePreventionGroupLayering = async (
 	});
 	return layering;
 };
+
+
+
+
+module.exports.processGroupPrevention = async (
+	trackedEntityInstances,
+	processedUnits,
+	periods
+) => {
+	const processed = trackedEntityInstances.flatMap(
+		({ attributes, enrollments, orgUnit }) => {
+			const units = processedUnits[orgUnit];
+			const [{ events, enrollmentDate, orgUnitName }] = enrollments;
+			const instance = fromPairs(
+				attributes.map(({ attribute, value }) => [attribute, value])
+			);
+			const doneSessions = periods.flatMap((period) => {
+				const start = period.startOf("quarter").toDate();
+				const end = period.endOf("quarter").toDate();
+				return events
+					.filter((event) => {
+						return (
+							event.eventDate &&
+							event.programStage === "VzkQBBglj3O" &&
+							isWithinInterval(new Date(event.eventDate), {
+								start,
+								end,
+							})
+						);
+					})
+					.map(({ dataValues }) => {
+						const code = dataValues.find(
+							({ dataElement }) => dataElement === "ypDUCAS6juy"
+						);
+						const session = dataValues.find(
+							({ dataElement }) => dataElement === "n20LkH4ZBF8"
+						);
+						return {
+							session: session ? session.value : undefined,
+							code: code ? code.value : undefined,
+							qtr: period.format("YYYY[Q]Q"),
+						};
+					});
+			});
+			const subType = instance ? instance["mWyp85xIzXR"] : "";
+			const allSubTypes = String(subType).split(",");
+			const completed = this.mapping[subType];
+			const groupedSessions = groupBy(doneSessions, "code");
+			return events
+				.filter((event) => event.programStage === "aTZwDRoJnxj")
+				.flatMap(({ event, dataValues }) => {
+					const elements = fromPairs(
+						dataValues.map(({ dataElement, value }) => [dataElement, value])
+					);
+					const individualCode = elements.ypDUCAS6juy;
+					let participantSessions = [];
+					if (groupedSessions[individualCode]) {
+						participantSessions = groupedSessions[individualCode].filter(
+							(i) => {
+								return sessions[allSubTypes[0]].indexOf(i.session) !== -1;
+							}
+						);
+					}
+					const groupedParticipantSessions = groupBy(
+						participantSessions,
+						"qtr"
+					);
+					return Object.entries(groupedParticipantSessions).map(
+						([qtr, attendedSession]) => {
+							const uniqSessions = uniqBy(attendedSession, (v) =>
+								[v.session, v.code].join()
+							);
+							const sess = fromPairs(
+								uniqSessions.map(({ session }) => [session, 1])
+							);
+							return {
+								event,
+								id: `${individualCode}${qtr}`,
+								...elements,
+								...instance,
+								...sess,
+								...units,
+								parish: orgUnitName,
+								qtr,
+								enrollmentDate,
+								[subType]: uniqSessions.length,
+								[completed]:
+									uniqSessions.length >= this.mapping2[subType] ? 1 : 0,
+								completedPrevention:
+									uniqSessions.length >= this.mapping2[subType] ? 1 : 0,
+							};
+						}
+					);
+				});
+		}
+	);
+	return processed;
+};

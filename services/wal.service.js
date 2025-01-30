@@ -9,6 +9,7 @@ const {
 	generateLayering,
 	processBulkInserts,
 	previousLayering,
+	processGroupPrevention,
 } = require("../process");
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -44,6 +45,7 @@ module.exports = {
 					page = 1, 
 					generate = false, 
 					prevention= false,
+					preventiongroup = false,
 					program 
 				} = ctx.params;
 				let pageCount = 1;
@@ -95,7 +97,8 @@ module.exports = {
 								page,
 								pageCount,
 								processedUnits,
-								prevention
+								prevention,
+								preventiongroup
 							});
 						}
 						page = page + 1;
@@ -116,7 +119,8 @@ module.exports = {
 					page,
 					pageCount,
 					processedUnits,
-					prevention
+					prevention,
+					preventiongroup
 				} = ctx.params;
 				const foundEvents = groupBy(calculatedEvents, "programStage");
 				const requests = Object.entries(foundEvents).flatMap(
@@ -155,21 +159,70 @@ module.exports = {
 						processedUnits,
 					});
 				}
-				if (prevention) {
+				if (preventiongroup) {
 					this.localQueue(ctx, "generatePreventionGroupLayering", {
+						instances,
+						processedUnits,
+					});
+				}
+				if (prevention) {
+					this.localQueue(ctx, "generatePreventionLayering", {
 						instances,
 						processedUnits,
 					});
 				}
 			},
 		},
+		generatePreventionLayering: {
+			queue: true,
+			async handler(ctx) {
+				this.logger.info("========= Generating Prevention Layering =======");
+				const { instances, processedUnits } = ctx.params;
+				this.logger.info("========= Process Indexing Prevention Layering =======");
+				const preventionLayering = processGroupPrevention (
+					instances,
+					processedUnits,
+					periods=[
+						moment().subtract(12, "quarters"),
+						moment().subtract(11, "quarters"),
+						moment().subtract(10, "quarters"),
+						moment().subtract(9, "quarters"),
+						moment().subtract(8, "quarters"),
+						moment().subtract(7, "quarters"),
+						moment().subtract(6, "quarters"),
+						moment().subtract(5, "quarters"),
+						moment().subtract(4, "quarters"),
+						moment().subtract(3, "quarters"),
+						moment().subtract(2, "quarters"),
+						moment().subtract(1, "quarters"),
+						moment(),
+					]
+				) 
+				this.logger.info("========= Started Indexing Prevention Layering =======");
+				const inserted = await Promise.all(
+					chunk(preventionLayering, 250).map((dataset) =>
+						ctx.call("es.bulk", {
+							index: "prevention-layering",
+							dataset,
+						})
+					)
+				);
+
+				const { totalSuccess, totalErrors, errors } =
+					processBulkInserts(inserted);
+
+				this.logger.info(`Total Index:${totalSuccess}`);
+				this.logger.info(`Indexes errored:${totalErrors}`);
+				this.logger.info(errors);
+			}
+		},
 		generatePreventionGroupLayering: {
 			queue: true,
 			async handler(ctx) {
 				this.logger.info("========= Generating Prevention Group Layering =======");
 				const { instances, processedUnits } = ctx.params;
-				this.logger.info("========= Indexing Prevention Group Layering =======");
-				prevLayering = generatePreventionGroupLayering (
+				this.logger.info("========= Processing Indexing Prevention Group Layering =======");
+				const prevLayering = generatePreventionGroupLayering (
 					periods=[
 						moment().subtract(12, "quarters"),
 						moment().subtract(11, "quarters"),
@@ -189,8 +242,9 @@ module.exports = {
 					processedUnits,
 					prevention = true
 				) 
+				this.logger.info("========= Started Indexing Prevention Group Layering =======");
 				const inserted = await Promise.all(
-					chunk(previousLayering, 250).map((dataset) =>
+					chunk(prevLayering, 250).map((dataset) =>
 						ctx.call("es.bulk", {
 							index: "layering2",
 							dataset,
