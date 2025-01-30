@@ -1,4 +1,7 @@
 "use strict";
+const dotenv = require("dotenv");
+
+//dotenv.config();
 
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -13,6 +16,7 @@ const instance = axios.create({
 	},
 });
 
+console.log("BASEURL:", process.env.ICYD_BASE_URL)
 module.exports = {
 	name: "dhis2",
 
