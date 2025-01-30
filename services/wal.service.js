@@ -8,6 +8,7 @@ const {
 	processPreviousLayering,
 	generateLayering,
 	processBulkInserts,
+	previousLayering,
 } = require("../process");
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
@@ -39,7 +40,12 @@ module.exports = {
 		queryDHIS2: {
 			queue: true,
 			async handler(ctx) {
-				let { page = 1, generate = false, program } = ctx.params;
+				let { 
+					page = 1, 
+					generate = false, 
+					prevention= false,
+					program 
+				} = ctx.params;
 				let pageCount = 1;
 				try {
 					this.logger.info("Querying organisation units");
@@ -89,6 +95,7 @@ module.exports = {
 								page,
 								pageCount,
 								processedUnits,
+								prevention
 							});
 						}
 						page = page + 1;
@@ -109,6 +116,7 @@ module.exports = {
 					page,
 					pageCount,
 					processedUnits,
+					prevention
 				} = ctx.params;
 				const foundEvents = groupBy(calculatedEvents, "programStage");
 				const requests = Object.entries(foundEvents).flatMap(
@@ -147,7 +155,56 @@ module.exports = {
 						processedUnits,
 					});
 				}
+				if (prevention) {
+					this.localQueue(ctx, "generatePreventionGroupLayering", {
+						instances,
+						processedUnits,
+					});
+				}
 			},
+		},
+		generatePreventionGroupLayering: {
+			queue: true,
+			async handler(ctx) {
+				this.logger.info("========= Generating Prevention Group Layering =======");
+				const { instances, processedUnits } = ctx.params;
+				this.logger.info("========= Indexing Prevention Group Layering =======");
+				prevLayering = generatePreventionGroupLayering (
+					periods=[
+						moment().subtract(12, "quarters"),
+						moment().subtract(11, "quarters"),
+						moment().subtract(10, "quarters"),
+						moment().subtract(9, "quarters"),
+						moment().subtract(8, "quarters"),
+						moment().subtract(7, "quarters"),
+						moment().subtract(6, "quarters"),
+						moment().subtract(5, "quarters"),
+						moment().subtract(4, "quarters"),
+						moment().subtract(3, "quarters"),
+						moment().subtract(2, "quarters"),
+						moment().subtract(1, "quarters"),
+						moment(),
+					],
+					instances,
+					processedUnits,
+					prevention = true
+				) 
+				const inserted = await Promise.all(
+					chunk(previousLayering, 250).map((dataset) =>
+						ctx.call("es.bulk", {
+							index: "layering2",
+							dataset,
+						})
+					)
+				);
+
+				const { totalSuccess, totalErrors, errors } =
+					processBulkInserts(inserted);
+
+				this.logger.info(`Total Index:${totalSuccess}`);
+				this.logger.info(`Indexes errored:${totalErrors}`);
+				this.logger.info(errors);
+			}
 		},
 		generateLayering: {
 			queue: true,

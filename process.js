@@ -4662,3 +4662,162 @@ module.exports.generatePrevention = async (
 		);
 	}
 };
+
+
+module.exports.generatePreventionGroupLayering = async (
+	periods,
+	instances,
+	processedUnits,
+	prevention = true
+) => {
+	const allInstances = instances.map(
+		({ trackedEntityInstance }) => trackedEntityInstance
+	);
+	const groupedActivities = fromPairs(
+		instances.map((instance) => [instance.trackedEntityInstance, instance])
+	);
+	const [participants, availableSession] = await Promise.all([
+		this.getProgramStageData(allInstances, "aTZwDRoJnxj"),
+		this.getProgramStageData(allInstances, "VzkQBBglj3O"),
+	]);
+    console.log("AvailableSessions:",chunk(availableSession,3)[0]);
+	const allSessions = Object.values(availableSession)
+		.flat()
+		.map(({ ypDUCAS6juy, n20LkH4ZBF8, trackedEntityInstance, eventDate }) => {
+			const qtr = moment(eventDate).format("YYYY[Q]Q");
+			const year = moment(eventDate).year();
+			const month = moment(eventDate).month();
+			let financialYear = `FY${year}`;
+			if (month >= 9) {
+				financialYear = `FY${year + 1}`;
+			}
+			return {
+				id: `${trackedEntityInstance}${ypDUCAS6juy || ""}`,
+				session: n20LkH4ZBF8 ? n20LkH4ZBF8 : undefined,
+				code: ypDUCAS6juy ? ypDUCAS6juy : undefined,
+				qtr,
+				financialYear,
+				eventDate,
+			};
+		});
+
+	const doneSessions = periods.flatMap((period) => {
+		let start = period.startOf("quarter").toDate();
+		let end = period.endOf("quarter").toDate();
+
+		if (prevention) {
+			const [financialQuarterStart, financialQuarterEnd] =
+				this.calculateQuarter(period.year(), period.quarter());
+			start = financialQuarterStart;
+			end = financialQuarterEnd;
+		}
+
+		return allSessions.filter((event) => {
+			return (
+				event.eventDate &&
+				isWithinInterval(new Date(event.eventDate), {
+					start,
+					end,
+				})
+			);
+		});
+	});
+
+	const groupedSessions = groupBy(doneSessions, "id");
+	const allGroupedSessions = groupBy(allSessions, "id");
+	const layering = periods.flatMap((period) => {
+		const qtr = period.format("YYYY[Q]Q");
+		const month = period.month();
+		const year = period.year();
+		let fy = `FY${year - 1}`;
+		if (month >= 9) {
+			fy = `FY${year}`;
+		}
+
+		return Object.values(participants)
+			.flat()
+			.map(
+				({
+					ypDUCAS6juy,
+					trackedEntityInstance,
+					eXWM3v3oIKu,
+					event,
+					...rest1
+				}) => {
+					const {
+						orgUnit,
+						mWyp85xIzXR: subType,
+						...rest
+					} = groupedActivities[trackedEntityInstance];
+					const allSubTypes = String(subType).split(",");
+					const units = processedUnits[orgUnit];
+					let initial = {};
+					allSubTypes.forEach((sub) => {
+						const value = sessions[sub] || [];
+						const completed = this.mapping[sub];
+						let foundSessions = (
+							groupedSessions[`${trackedEntityInstance}${ypDUCAS6juy || ""}`] ||
+							[]
+						).filter(
+							(session) =>
+								session.qtr === qtr && value.indexOf(session.session) !== -1
+						);
+
+						let financialSessions = (
+							allGroupedSessions[
+								`${trackedEntityInstance}${ypDUCAS6juy || ""}`
+							] || []
+						).filter(
+							(session) =>
+								session.financialYear === fy &&
+								value.indexOf(session.session) !== -1
+						);
+
+						let allSessions = (
+							allGroupedSessions[
+								`${trackedEntityInstance}${ypDUCAS6juy || ""}`
+							] || []
+						).filter(
+							(session) =>
+								session.eventDate &&
+								isBefore(new Date(session.eventDate), period.toDate()) &&
+								value.indexOf(session.session) !== -1
+						);
+
+						foundSessions = uniqBy(foundSessions, "session");
+						financialSessions = uniqBy(financialSessions, "session");
+						initial = {
+							...initial,
+							[sub]: foundSessions.length,
+							[completed]: foundSessions.length >= this.mapping2[sub] ? 1 : 0,
+							completedPrevention:
+								foundSessions.length >= this.mapping2[sub] ? 1 : 0,
+							completedLastFinancialYear:
+								financialSessions.length >= this.mapping2[sub] ? 1 : 0,
+							everCompleted: allSessions.length >= this.mapping2[sub] ? 1 : 0,
+							...fromPairs(
+								foundSessions.map(({ session }) => [`${session}`, 1])
+							),
+						};
+					});
+					const ageGroup = this.findAgeGroup(Number(eXWM3v3oIKu));
+					return {
+						ypDUCAS6juy,
+						...rest1,
+						trackedEntityInstance,
+						orgUnit,
+						mWyp85xIzXR: subType,
+						ageGroup,
+						eXWM3v3oIKu,
+						...rest,
+						...initial,
+						...units,
+						qtr,
+						event,
+						id: `${event}${qtr}`,
+					};
+				}
+			);
+	});
+	return layering;
+};
