@@ -44,7 +44,6 @@ module.exports = {
 				path: "/",
 			},
 			async handler(ctx) {
-				this.logger.info(`Server:${ process.env.ICYD_BASE_URL}`);
 				const { url, ...params } = ctx.params;
 				const { data } = await instance.get(url, {
 					params,

@@ -8,8 +8,8 @@ const {
 	processPreviousLayering,
 	generateLayering,
 	processBulkInserts,
-	previousLayering,
 	processGroupPrevention,
+	generatePreventionGroupLayering
 } = require("../process");
 /**
  * @typedef {import('moleculer').Context} Context Moleculer's Context
